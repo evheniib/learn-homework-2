@@ -11,65 +11,10 @@
 8. Реализовать сводку по команде или как-то еще
 
 """
+import string
 import csv
 import random 
 from random import randint
-
-# Инициальзация игры
-def start_game(stop = False, users_list = None):
-    if not users_list:
-        users_list = []
-        while True:
-            user_bot = input("С вами будет играть бот? \nНапишите 'Да' или 'Нет': ")
-            if user_bot == "Да":
-                users_list.append("Bot")
-            elif user_bot != "Да" and user_bot != "Нет":
-                print("Не известная команда, попробуйте еще раз\n")
-                continue
-            print("Напишите в чат кто будет играть:\n Напишите 'Стоп' когда закончите\n")
-           
-            i = 1
-            while True:
-                amount = input(f"Игрок №{i} ")
-                if amount == 'Стоп':
-                    random.shuffle(users_list,random.random)
-                    print("\nПорядок игроков следующий:")
-                    for user in range(len(users_list)):
-                        print(f"{user + 1}. {users_list[user]}")
-                    return users_list
-                users_list.append(amount)
-                i += 1
-
-
-""" 
-1. Хочу разработать пуск игры по очереди используя функцию user_turn(user, oponent_word = None), 
-2. Тот кто ходит первый идет без проверки предыдущего слова.
-3. Запись слов будет идти в список словарей, где в словаре {'Слово':'Игрок'} 
-4. Текущая функция должна проверять проверять вернувшееся в нее слово от игрока
-   и если все ок то добавляем пару Слово:Игрок в словарь.
-5. Я не знаю на стороне какой функции лучше реализовать 
-   проверку попадания первой буквы нового слова в последнию предыдущего
-   game_master() или user_turn()
-
-# Запускает игру останавливается когда user_turn передаст "Стоп"
-def game_master():
-    users_list = start_game()
-    print(f"Да начнется игра! Первым ходит {users_list[0]}")
-    word_log = [
-        {None: None},
-    ]
-    turn = 0
-
-    while True:
-        if turn <= len(users_list):
-            user_word = {}
-            user_answer = user_turn(users_list[turn], word_log[-1].)
-            user_word[user_answer] = users_list[turn]
-            word_log.append(user_word)
-            continue
-        turn = 0
-"""
-
 
 
 def city_list():
@@ -83,32 +28,79 @@ def city_list():
     return city
 
 
-# Получение списка городов, возвращаем город который есть в csv файле
-def user_turn(user, oponent_word = None):
-    if not oponent_word:
-        print(f"{user} first!")
-    #Если бот   
-    if user == 'Bot':
-        if oponent_word:
-            for city_name in city_list():
-                if oponent_word[-1].upper() == city_name[0]:
-                    send_city(city_name, "Bot")
-                    return user_turn(city_name)           
-        city_name = random.choice(city_list())
-        send_city(city_name, "Bot`s")
-        return user_turn(city_name)
-    #Если игрок  
-    if oponent_word:
+# Инициальзация игры
+def start_game(stop = False, users_list = None):
+    if not users_list:
+        users_list = []
         while True:
-            city_name = input(" Введите город : ")
-            if city_name in city_list():
-                return send_city(city_name)
-            print("Я не знаю такого города, попробуй ввести другой город")
-    
+            user_bot = input("С вами будет играть бот? \nНапишите 'Да' или 'Нет': ")
+            if user_bot == "Да":
+                users_list.append("is_user_bot")
+            elif user_bot != "Нет":
+                print("Не известная команда, попробуйте еще раз\n")
+                continue
+            print("Напишите в чат кто будет играть:\n Напишите 'Стоп' когда закончите\n")
+           
+            i = 1
+            while True:
+                player_name_or_stop = input(f"Игрок №{i} ")
+                if player_name_or_stop == 'Стоп':
+                    random.shuffle(users_list,random.random)
+                    print("\nПорядок игроков следующий:")
+                    for user in range(len(users_list)):
+                        print(f"{user + 1}. {users_list[user]}")
+                    return users_list
+                users_list.append(player_name_or_stop)
+                i += 1
 
-def send_city(city_name, user):
-    print(f"{user} назвал город {city_name} следущий игрок начинает на букву {city_name[-1].upper()}")
-    return city_name
 
-start_game()
+def game_master():
+    users_list = start_game()
+    word_log = dict()
+    letter = random.choice("АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ")
+    word_log[letter] = set()
+    raund = 1
+    while True:
+        print(f"Raund {raund}")
+        for user in users_list:
+            if letter not in word_log:
+                word_log[letter] = set()
+            if letter in "ЬЫЪЙЬ":
+                print(f"На {letter} сложно найти город, сейчас найдем случайную букву")
+                letter = random.choice("АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ")
+                
+            print(f"Игроку {user} на букву {letter}")
 
+            city_name = user_turn(user, letter, word_log)
+            print(f"Слово {city_name} зачтено!")
+            word_log[letter].add(city_name)
+            letter = city_name[-1].upper()
+        raund += 1
+        
+
+def user_turn(user, letter, word_log):
+    if user == "is_user_bot":
+        for city_name in city_list():
+            if city_name[0] == letter: 
+                if city_name[0] not in word_log: 
+                    print(f"Бот отвечает {city_name}")
+                    return city_name
+                if city_name not in word_log[letter]:
+                    print(f"Бот отвечает {city_name}")
+                    return city_name
+    while True:
+        city_name = input(" Введите город : ")
+        if city_name in city_list(): 
+            if city_name[0] == letter: 
+                if city_name[0] not in word_log: 
+                    return city_name
+                if city_name not in word_log[letter]:
+                    return city_name
+                print(f"Город {city_name} уже назывался, придумайте другой город на {letter}")
+                continue
+            print(f"Такой город существует но он начинается не на {letter}")
+            continue
+        print("Я не знаю такого города, попробуй ввести другой город")
+
+
+game_master()
